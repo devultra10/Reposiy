@@ -1,0 +1,50 @@
+# .github/workflows/python-package.yml
+
+name: Python Package
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]  # You can specify different Python versions here
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # If you have additional dependencies listed in requirements.txt
+
+    - name: Run tests
+      run: |
+        pytest  # Replace with unittest if you're using unittest for tests
+
+    - name: Build package
+      run: |
+        python setup.py sdist bdist_wheel  # Build the package
+
+    - name: Upload to PyPI
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        python -m pip install --upgrade twine
+        twine upload dist/*  # Upload the package to PyPI if it's a push to the main branch
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
